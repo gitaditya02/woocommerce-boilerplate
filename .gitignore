@@ -1,48 +1,56 @@
-# WordPress - ignore core, configuration, examples, uploads and logs.
-# https://github.com/github/gitignore/blob/main/WordPress.gitignore
-
-# Core
-#
-# Note: if you want to stage/commit WP core files
-# you can delete this whole section/until Configuration.
-/wp-admin/
-/wp-content/index.php
-/wp-content/languages
-/wp-content/plugins/index.php
-/wp-content/themes/index.php
-/wp-includes/
-/index.php
-/license.txt
-/readme.html
-/wp-*.php
-/xmlrpc.php
-
-# Configuration
+# WordPress specific
 wp-config.php
+wp-content/uploads/
+wp-content/backup-*
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+wp-content/cache/
+wp-content/backups/
+wp-content/updraft-backups/
+wp-content/object-cache.php
+wp-content/mu-plugins/index.php
 
-# Example themes
-/wp-content/themes/twenty*/
+# Plugins
+wp-content/plugins/akismet/
+wp-content/plugins/hello.php
+wp-content/plugins/woocommerce/
 
-# Example plugin
-/wp-content/plugins/hello.php
+# Themes
+wp-content/themes/twenty*/
 
-# Uploads
-/wp-content/uploads/
+# Package managers
+node_modules/
+package-lock.json
+yarn.lock
+composer.lock
+
+# Editor specific files
+.editorconfig
+.eslintrc.json
+.phpcs.xml.dist
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+.DS_Store
+Thumbs.db
 
 # Log files
 *.log
+wp-content/debug.log
 
-# htaccess
-/.htaccess
+# Environment variables
+.env
+.env.local
+.env.*.local
 
-# All plugins
-#
-# Note: If you wish to whitelist plugins,
-# uncomment the next line
-#/wp-content/plugins
+# Backups
+*.backup
+*.bak
+*.tmp
 
-# All themes
-#
-# Note: If you wish to whitelist themes,
-# uncomment the next line
-#/wp-content/themes
+# OS files
+.htaccess
+wp-cli.local.yml

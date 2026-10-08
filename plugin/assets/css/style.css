@@ -1,0 +1,37 @@
+/**
+ * WooCommerce Custom Plugin - Frontend Styles
+ */
+
+/* Custom Notice */
+.wc-custom-notice {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.wc-custom-notice p {
+    margin: 0;
+    color: #004085;
+}
+
+/* Custom Product Info */
+.custom-product-info {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-left: 4px solid #007cba;
+    margin: 20px 0;
+}
+
+.custom-product-info p {
+    margin: 0;
+    color: #333;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .wc-custom-notice {
+        padding: 10px 12px;
+    }
+}

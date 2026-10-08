@@ -1,0 +1,18 @@
+# Copyright (C) 2024 Your Name
+# This file is distributed under the same license as the WooCommerce Custom Plugin package.
+msgid ""
+msgstr ""
+"Project-Id-Version: WooCommerce Custom Plugin 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/gitaditya02/woocommerce-boilerplate\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "WooCommerce Custom Plugin requires WooCommerce to be installed and activated."
+msgstr ""
+
+msgid "Welcome to WooCommerce Custom Plugin!"
+msgstr ""
+
+msgid "This is a custom product section."
+msgstr ""
