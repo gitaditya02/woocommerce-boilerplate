@@ -1,32 +1,23 @@
+<?php
 /**
- * B2B WooCommerce Extension Styles
+ * B2B Email Templates
  */
 
-.b2b-wholesale-box {
-    background: #f5f8ff;
-    border: 1px solid #dfe9ff;
-    border-radius: 8px;
-    padding: 18px 20px;
-    margin: 20px 0;
+if (!defined('ABSPATH')) {
+    exit;
 }
 
-.b2b-wholesale-box h3 {
-    margin: 0 0 10px;
-    font-size: 1.1rem;
-}
+class B2B_Email_Templates {
+    public static function init() {
+        add_filter('wp_mail_from', [__CLASS__, 'set_from_email']);
+        add_filter('wp_mail_from_name', [__CLASS__, 'set_from_name']);
+    }
 
-.b2b-wholesale-box p {
-    margin: 0;
-    color: #32415b;
-}
+    public static function set_from_email() {
+        return get_option('admin_email');
+    }
 
-.woocommerce-form-login,
-.woocommerce-form-register {
-    max-width: 500px;
-}
-
-@media (max-width: 768px) {
-    .b2b-wholesale-box {
-        padding: 14px 16px;
+    public static function set_from_name() {
+        return get_bloginfo('name');
     }
 }

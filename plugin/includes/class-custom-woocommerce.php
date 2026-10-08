@@ -18,6 +18,12 @@ class B2B_Main {
         require_once B2B_WC_PATH . 'includes/class-b2b-importer.php';
         require_once B2B_WC_PATH . 'includes/class-b2b-tax-validation.php';
         require_once B2B_WC_PATH . 'includes/class-b2b-storefront.php';
+        require_once B2B_WC_PATH . 'includes/class-b2b-company-pricing.php';
+        require_once B2B_WC_PATH . 'includes/class-b2b-vat-validation.php';
+        require_once B2B_WC_PATH . 'includes/class-b2b-approval-queue.php';
+        require_once B2B_WC_PATH . 'includes/class-b2b-bulk-assignment.php';
+        require_once B2B_WC_PATH . 'includes/class-b2b-audit-log.php';
+        require_once B2B_WC_PATH . 'includes/class-b2b-email-templates.php';
 
         B2B_Customer_Manager::init();
         B2B_Pricing_Engine::init();
@@ -28,5 +34,11 @@ class B2B_Main {
         B2B_Importer::init();
         B2B_Tax_Validation::init();
         B2B_Storefront::init();
+        B2B_Company_Pricing::init();
+        B2B_VAT_Validation::init();
+        B2B_Approval_Queue::init();
+        B2B_Bulk_Assignment::init();
+        B2B_Audit_Log::init();
+        B2B_Email_Templates::init();
     }
 }
