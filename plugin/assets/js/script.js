@@ -1,47 +1,32 @@
 /**
- * WooCommerce Custom Plugin - Frontend Script
+ * B2B WooCommerce Extension Styles
  */
 
-(function($) {
-    'use strict';
+.b2b-wholesale-box {
+    background: #f5f8ff;
+    border: 1px solid #dfe9ff;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 20px 0;
+}
 
-    $(document).ready(function() {
-        // Initialize custom functionality
-        initCustomFunctionality();
-    });
+.b2b-wholesale-box h3 {
+    margin: 0 0 10px;
+    font-size: 1.1rem;
+}
 
-    /**
-     * Initialize custom functionality
-     */
-    function initCustomFunctionality() {
-        // Add your custom JavaScript here
-        console.log('WooCommerce Custom Plugin loaded');
+.b2b-wholesale-box p {
+    margin: 0;
+    color: #32415b;
+}
 
-        // Example: Listen to add to cart button
-        $(document.body).on('added_to_cart', function() {
-            console.log('Product added to cart');
-        });
+.woocommerce-form-login,
+.woocommerce-form-register {
+    max-width: 500px;
+}
+
+@media (max-width: 768px) {
+    .b2b-wholesale-box {
+        padding: 14px 16px;
     }
-
-    /**
-     * AJAX example function
-     */
-    function customAjaxCall(data) {
-        $.ajax({
-            url: wcCustom.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'custom_action',
-                nonce: wcCustom.nonce,
-                data: data
-            },
-            success: function(response) {
-                console.log('Success:', response);
-            },
-            error: function(error) {
-                console.error('Error:', error);
-            }
-        });
-    }
-
-})(jQuery);
+}

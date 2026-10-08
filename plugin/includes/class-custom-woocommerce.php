@@ -1,114 +1,53 @@
 <?php
 /**
- * Main WooCommerce Custom Plugin Class
+ * Plugin Name: B2B WooCommerce Extension
+ * Description: Production-ready B2B wholesale extension for WooCommerce.
+ * Version: 1.0.0
+ * Author: Your Name
+ * Author URI: https://example.com
+ * Text Domain: b2b-wc-extension
+ * Domain Path: /languages
+ * Requires: WooCommerce
+ * Requires at least: 5.0
+ * Tested up to: 6.5
+ * WC requires at least: 5.0
+ * WC tested up to: 8.0
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-class Custom_WooCommerce {
+define('B2B_WC_PATH', plugin_dir_path(__FILE__));
+define('B2B_WC_URL', plugin_dir_url(__FILE__));
+define('B2B_WC_VERSION', '1.0.0');
 
-    /**
-     * Initialize the plugin
-     */
-    public static function init() {
-        add_action('woocommerce_init', [__CLASS__, 'setup']);
-        add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
-        add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_assets']);
-        add_action('init', [__CLASS__, 'load_textdomain']);
+require_once B2B_WC_PATH . 'includes/class-custom-woocommerce.php';
+
+function b2b_wc_init() {
+    if (class_exists('WooCommerce')) {
+        B2B_WooCommerce_Extension::init();
+    } else {
+        add_action('admin_notices', 'b2b_wc_missing_notice');
+    }
+}
+add_action('plugins_loaded', 'b2b_wc_init');
+
+function b2b_wc_missing_notice() {
+    ?>
+    <div class="notice notice-error is-dismissible">
+        <p><?php esc_html_e('B2B WooCommerce Extension requires WooCommerce to be installed and activated.', 'b2b-wc-extension'); ?></p>
+    </div>
+    <?php
+}
+
+register_activation_hook(__FILE__, 'b2b_wc_activate');
+function b2b_wc_activate() {
+    if (!class_exists('WooCommerce')) {
+        deactivate_plugins(plugin_basename(__FILE__));
+        wp_die(esc_html__('B2B WooCommerce Extension requires WooCommerce to be installed and activated.', 'b2b-wc-extension'));
     }
 
-    /**
-     * Setup WooCommerce hooks
-     */
-    public static function setup() {
-        // Add your custom hooks and filters here
-        add_action('woocommerce_before_main_content', [__CLASS__, 'display_custom_message']);
-        
-        // Example: Modify product loop columns
-        add_filter('woocommerce_product_loop_columns', [__CLASS__, 'products_per_row']);
-        
-        // Example: Custom product actions
-        add_action('woocommerce_single_product_summary', [__CLASS__, 'custom_product_info'], 25);
-    }
-
-    /**
-     * Enqueue frontend assets
-     */
-    public static function enqueue_assets() {
-        if (is_woocommerce() || is_cart() || is_checkout()) {
-            wp_enqueue_style(
-                'wc-custom-style',
-                WC_CUSTOM_PLUGIN_URL . 'assets/css/style.css',
-                [],
-                WC_CUSTOM_PLUGIN_VERSION
-            );
-
-            wp_enqueue_script(
-                'wc-custom-script',
-                WC_CUSTOM_PLUGIN_URL . 'assets/js/script.js',
-                ['jquery', 'wc-add-to-cart'],
-                WC_CUSTOM_PLUGIN_VERSION,
-                true
-            );
-
-            wp_localize_script('wc-custom-script', 'wcCustom', [
-                'ajaxurl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('wc-custom-nonce'),
-            ]);
-        }
-    }
-
-    /**
-     * Enqueue admin assets
-     */
-    public static function enqueue_admin_assets() {
-        wp_enqueue_style(
-            'wc-custom-admin-style',
-            WC_CUSTOM_PLUGIN_URL . 'assets/css/admin-style.css',
-            [],
-            WC_CUSTOM_PLUGIN_VERSION
-        );
-    }
-
-    /**
-     * Load text domain for translations
-     */
-    public static function load_textdomain() {
-        load_plugin_textdomain(
-            'wc-custom-plugin',
-            false,
-            dirname(plugin_basename(__FILE__)) . '/languages/'
-        );
-    }
-
-    /**
-     * Display custom message before main content
-     */
-    public static function display_custom_message() {
-        echo '<div class="wc-custom-notice notice-info">';
-        echo '<p>' . esc_html__('Welcome to WooCommerce Custom Plugin!', 'wc-custom-plugin') . '</p>';
-        echo '</div>';
-    }
-
-    /**
-     * Set number of products per row
-     *
-     * @param int $cols Number of columns
-     * @return int
-     */
-    public static function products_per_row($cols) {
-        return 3;
-    }
-
-    /**
-     * Add custom product information
-     */
-    public static function custom_product_info() {
-        global $product;
-        echo '<div class="custom-product-info">';
-        echo '<p>' . esc_html__('This is a custom product section.', 'wc-custom-plugin') . '</p>';
-        echo '</div>';
-    }
+    B2B_WooCommerce_Extension::register_wholesale_role();
+    B2B_WooCommerce_Extension::set_default_options();
 }
