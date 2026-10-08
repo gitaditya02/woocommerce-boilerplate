@@ -1,0 +1,474 @@
+plugin/includes/class-custom-woocommerce.php
+content":"<?php
+/**
+ * B2B WooCommerce Starter Class
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class B2B_WooCommerce {
+
+    public static function init() {
+        self::register_wholesale_role();
+        self::register_hooks();
+    }
+
+    public static function register_wholesale_role() {
+        if (!get_role('wholesale_customer')) {
+            add_role(
+                'wholesale_customer',
+                __('Wholesale Customer', 'b2b-wc-starter'),
+                array(
+                    'read' => true,
+                    'edit_posts' => false,
+                    'delete_posts' => false,
+                    'publish_posts' => false,
+                )
+            );
+        }
+    }
+
+    public static function register_hooks() {
+        add_action('init', [__CLASS__, 'load_textdomain']);
+        add_action('admin_menu', [__CLASS__, 'register_admin_menu']);
+        add_action('admin_init', [__CLASS__, 'register_settings']);
+        add_action('woocommerce_register_form_start', [__CLASS__, 'render_registration_fields']);
+        add_action('woocommerce_created_customer', [__CLASS__, 'save_registration_fields'], 10, 3);
+        add_action('woocommerce_before_checkout_form', [__CLASS__, 'enforce_minimum_order_before_checkout']);
+        add_action('woocommerce_before_calculate_totals', [__CLASS__, 'apply_wholesale_pricing_rules'], 20);
+        add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
+        add_action('woocommerce_before_single_product', [__CLASS__, 'check_product_access_for_wholesale_users']);
+    }
+
+    public static function load_textdomain() {
+        load_plugin_textdomain('b2b-wc-starter', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+    }
+
+    public static function register_admin_menu() {
+        add_submenu_page(
+            'woocommerce',
+            __('B2B Settings', 'b2b-wc-starter'),
+            __('B2B Settings', 'b2b-wc-starter'),
+            'manage_woocommerce',
+            'b2b-wc-settings',
+            [__CLASS__, 'render_admin_page']
+        );
+    }
+
+    public static function register_settings() {
+        register_setting('b2b_wc_settings_group', 'b2b_wc_minimum_order', 'floatval');
+        register_setting('b2b_wc_settings_group', 'b2b_wc_catalog_restricted', 'intval');
+        register_setting('b2b_wc_settings_group', 'b2b_wc_require_approval', 'intval');
+        register_setting('b2b_wc_settings_group', 'b2b_wc_wholesale_discount', 'floatval');
+    }
+
+    public static function render_admin_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('B2B WooCommerce Settings', 'b2b-wc-starter'); ?></h1>
+            <form method="post" action="options.php">
+                <?php settings_fields('b2b_wc_settings_group'); ?>
+                <?php do_settings_sections('b2b_wc_settings_group'); ?>
+
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">
+                            <label for="b2b_wc_minimum_order"><?php esc_html_e('Minimum order value', 'b2b-wc-starter'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" step="0.01" min="0" id="b2b_wc_minimum_order" name="b2b_wc_minimum_order" value="<?php echo esc_attr(get_option('b2b_wc_minimum_order', 0)); ?>" />
+                            <p class="description"><?php esc_html_e('Set the minimum subtotal required before a wholesale customer can check out.', 'b2b-wc-starter'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="b2b_wc_wholesale_discount"><?php esc_html_e('Wholesale discount (%)', 'b2b-wc-starter'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" step="0.01" min="0" max="100" id="b2b_wc_wholesale_discount" name="b2b_wc_wholesale_discount" value="<?php echo esc_attr(get_option('b2b_wc_wholesale_discount', 0)); ?>" />
+                            <p class="description"><?php esc_html_e('Optional percentage discount applied to wholesale users.', 'b2b-wc-starter'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Restrict catalog', 'b2b-wc-starter'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="b2b_wc_catalog_restricted" value="1" <?php checked(get_option('b2b_wc_catalog_restricted', 0), 1); ?> />
+                                <?php esc_html_e('Only show products to wholesale customers when enabled.', 'b2b-wc-starter'); ?>
+                            </label>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Require approval', 'b2b-wc-starter'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="b2b_wc_require_approval" value="1" <?php checked(get_option('b2b_wc_require_approval', 0), 1); ?> />
+                                <?php esc_html_e('New B2B accounts must be approved by an admin.', 'b2b-wc-starter'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+
+                <?php submit_button(); ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    public static function render_registration_fields() {
+        ?>
+        <p class="form-row form-row-wide">
+            <label for="b2b_company_name"><?php esc_html_e('Company Name', 'b2b-wc-starter'); ?> <span class="required">*</span></label>
+            <input type="text" class="input-text" name="b2b_company_name" id="b2b_company_name" value="<?php echo esc_attr(isset($_POST['b2b_company_name']) ? $_POST['b2b_company_name'] : ''); ?>" />
+        </p>
+
+        <p class="form-row form-row-wide">
+            <label for="b2b_vat_number"><?php esc_html_e('VAT Number', 'b2b-wc-starter'); ?></label>
+            <input type="text" class="input-text" name="b2b_vat_number" id="b2b_vat_number" value="<?php echo esc_attr(isset($_POST['b2b_vat_number']) ? $_POST['b2b_vat_number'] : ''); ?>" />
+        </p>
+        <?php
+    }
+
+    public static function save_registration_fields($customer_id, $new_customer_data = array(), $password_generated = false) {
+        if (isset($_POST['b2b_company_name'])) {
+            update_user_meta($customer_id, 'billing_company', sanitize_text_field(wp_unslash($_POST['b2b_company_name'])));
+            update_user_meta($customer_id, 'company_name', sanitize_text_field(wp_unslash($_POST['b2b_company_name'])));
+        }
+
+        if (isset($_POST['b2b_vat_number'])) {
+            update_user_meta($customer_id, 'billing_vat_number', sanitize_text_field(wp_unslash($_POST['b2b_vat_number'])));
+            update_user_meta($customer_id, 'vat_number', sanitize_text_field(wp_unslash($_POST['b2b_vat_number'])));
+        }
+
+        $user = get_userdata($customer_id);
+        if ($user && !in_array('wholesale_customer', (array) $user->roles, true)) {
+            $user->set_role('wholesale_customer');
+        }
+    }
+
+    public static function enforce_minimum_order_before_checkout() {
+        if (!is_user_logged_in()) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('wholesale_customer', (array) $user->roles, true)) {
+            return;
+        }
+
+        $minimum_order = (float) get_option('b2b_wc_minimum_order', 0);
+        if ($minimum_order <= 0 || !WC()->cart) {
+            return;
+        }
+
+        $cart_total = WC()->cart->get_subtotal();
+
+        if ($cart_total < $minimum_order) {
+            wc_add_notice(
+                sprintf(
+                    __('Your wholesale order subtotal must be at least %s before checkout.', 'b2b-wc-starter'),
+                    wc_price($minimum_order)
+                ),
+                'error'
+            );
+        }
+    }
+
+    public static function apply_wholesale_pricing_rules($cart) {
+        if (is_admin() && !defined('DOING_AJAX')) {
+            return;
+        }
+
+        if (!is_user_logged_in()) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('wholesale_customer', (array) $user->roles, true)) {
+            return;
+        }
+
+        $discount = (float) get_option('b2b_wc_wholesale_discount', 0);
+        if ($discount <= 0) {
+            return;
+        }
+
+        foreach ($cart->get_cart() as $cart_item) {
+            $product = $cart_item['data'];
+            if (!$product || !$product->exists()) {
+                continue;
+            }
+
+            $regular_price = (float) $product->get_regular_price();
+            $sale_price = (float) $product->get_sale_price();
+            $discounted_price = $sale_price > 0 ? $sale_price : $regular_price;
+            $new_price = $discounted_price * (1 - ($discount / 100));
+
+            $product->set_price($new_price);
+        }
+    }
+
+    public static function check_product_access_for_wholesale_users() {
+        if (!is_user_logged_in() || is_admin()) {
+            return;
+        }
+
+        $restriction = get_option('b2b_wc_catalog_restricted', 0);
+        if (!$restriction) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('wholesale_customer', (array) $user->roles, true)) {
+            wc_add_notice(__('This catalog is restricted to wholesale customers only.', 'b2b-wc-starter'), 'error');
+            wp_safe_redirect(home_url());
+            exit;
+        }
+    }
+
+    public static function enqueue_assets() {
+        wp_enqueue_style('b2b-wc-starter-style', B2B_WC_PLUGIN_URL . 'assets/css/style.css', [], B2B_WC_PLUGIN_VERSION);
+        wp_enqueue_script('b2b-wc-starter-script', B2B_WC_PLUGIN_URL . 'assets/js/script.js', ['jquery'], B2B_WC_PLUGIN_VERSION, true);
+    }
+}
+
+
+/*
+ * Compatibility helper: allow legacy class name resolution.
+ */
+class Custom_WooCommerce extends B2B_WooCommerce {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* End of file */
+"},{

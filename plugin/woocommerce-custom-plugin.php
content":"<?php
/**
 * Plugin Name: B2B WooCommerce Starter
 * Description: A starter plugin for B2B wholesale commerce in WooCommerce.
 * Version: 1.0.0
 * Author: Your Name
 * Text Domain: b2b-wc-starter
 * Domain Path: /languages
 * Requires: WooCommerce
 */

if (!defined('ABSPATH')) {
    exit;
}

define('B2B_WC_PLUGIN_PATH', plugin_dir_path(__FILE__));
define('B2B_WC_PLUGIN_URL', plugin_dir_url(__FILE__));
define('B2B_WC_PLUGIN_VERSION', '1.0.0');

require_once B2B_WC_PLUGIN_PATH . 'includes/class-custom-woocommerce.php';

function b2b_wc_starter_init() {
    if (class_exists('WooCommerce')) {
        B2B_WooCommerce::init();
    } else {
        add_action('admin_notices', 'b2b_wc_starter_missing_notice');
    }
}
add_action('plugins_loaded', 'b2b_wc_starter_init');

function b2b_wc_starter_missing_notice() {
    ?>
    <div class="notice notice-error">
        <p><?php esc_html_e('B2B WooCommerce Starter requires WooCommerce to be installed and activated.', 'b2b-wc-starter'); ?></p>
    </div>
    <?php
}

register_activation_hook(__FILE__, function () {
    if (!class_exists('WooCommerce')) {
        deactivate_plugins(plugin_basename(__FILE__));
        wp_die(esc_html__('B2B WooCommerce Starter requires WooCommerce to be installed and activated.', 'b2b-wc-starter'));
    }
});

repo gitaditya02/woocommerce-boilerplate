@@ -1,0 +1,91 @@
+# B2B WooCommerce Starter
+
+A starter plugin for building a B2B (business-to-business) WooCommerce extension. This boilerplate includes wholesale customer handling, role-based pricing visibility, minimum order enforcement, and admin configuration.
+
+## Included Features
+
+- Wholesale customer role and registration fields
+- B2B company details on registration
+- Minimum order threshold enforcement
+- Admin settings page for B2B configuration
+- Product visibility rules for wholesale users
+- Frontend notices and styling ready for customization
+
+## Directory Structure
+
+```text
+woocommerce-boilerplate/
+├── plugin/
+│   ├── woocommerce-custom-plugin.php
+│   ├── includes/
+│   │   └── class-custom-woocommerce.php
+│   ├── assets/
+│   │   ├── css/
+│   │   │   └── style.css
+│   │   └── js/
+│   │       └── script.js
+│   └── languages/
+│       └── wc-custom-plugin.pot
+├── theme/
+│   ├── functions.php
+│   └── style.css
+├── README.md
+├── CONTRIBUTING.md
+├── LICENSE
+└── .gitignore
+```
+
+## B2B Use Cases Covered
+
+- Wholesale account registration
+- Company/VAT entry during signup
+- Enforced minimum order amount
+- Wholesale-only product visibility
+- Customer role checks for checkout operations
+- Easy admin settings panel
+
+## Quick Start
+
+1. Copy the `plugin/` folder into `wp-content/plugins/`
+2. Activate the plugin from the WordPress admin panel
+3. Go to `WooCommerce > B2B Settings` to configure the extension
+4. Create or update wholesale users with the `wholesale_customer` role
+
+## Key Settings
+
+The plugin supports these admin options:
+
+- Minimum order value for wholesale customers
+- Enable catalog visibility restrictions
+- Require approval for wholesale accounts
+- Set B2B-only checkout notices
+
+## Example Role Setup
+
+```php
+add_role(
+    'wholesale_customer',
+    __('Wholesale Customer', 'b2b-wc-starter'),
+    array(
+        'read' => true,
+        'edit_posts' => false,
+    )
+);
+```
+
+## Best Practices
+
+- Keep custom B2B logic in plugin code rather than editing WooCommerce core files
+- Use hooks and filters to configure checkout and product behavior
+- Validate role-based access carefully for both storefront and admin screens
+- Add approval workflows if you support manual wholesale account validation
+
+## Requirements
+
+- WordPress 5.0+
+- WooCommerce 5.0+
+- PHP 7.2+
+
+## License
+
+GPL v2 or later.
